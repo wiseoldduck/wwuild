@@ -17,6 +17,14 @@
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
   // Override point for customization after application launch.
+
+  UILabel *test = [[UILabel alloc] init];
+  NSLog(@"%ld", (NSUInteger) test.lineBreakMode);
+  NSParagraphStyle *style = [[NSParagraphStyle alloc] init];
+  NSParagraphStyle *style2 = [NSParagraphStyle defaultParagraphStyle];
+  NSLog(@"%@", style);
+  NSLog(@"%@", style2);
+  NSLog(@"%d", [style isEqual:style2]);
   return YES;
 }
 

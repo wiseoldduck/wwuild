@@ -13,6 +13,7 @@
 		0FA39B66211BC9DD00949644 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0FA39B65211BC9DD00949644 /* Assets.xcassets */; };
 		0FA39B69211BC9DD00949644 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0FA39B67211BC9DD00949644 /* LaunchScreen.storyboard */; };
 		0FA39B6C211BC9DD00949644 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 0FA39B6B211BC9DD00949644 /* main.m */; };
+		C0EB08C6B18D3162057CAF04 /* libPods-wwuild.a in Frameworks */ = {isa = PBXBuildFile; fileRef = F1C453F5AB1372D42C017A3F /* libPods-wwuild.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +27,9 @@
 		0FA39B68211BC9DD00949644 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		0FA39B6A211BC9DD00949644 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		0FA39B6B211BC9DD00949644 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		3991DBBE72E671962AFF65DB /* Pods-wwuild.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-wwuild.debug.xcconfig"; path = "Pods/Target Support Files/Pods-wwuild/Pods-wwuild.debug.xcconfig"; sourceTree = "<group>"; };
+		B05B5ABB5C95E05EEF2F06AE /* Pods-wwuild.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-wwuild.release.xcconfig"; path = "Pods/Target Support Files/Pods-wwuild/Pods-wwuild.release.xcconfig"; sourceTree = "<group>"; };
+		F1C453F5AB1372D42C017A3F /* libPods-wwuild.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-wwuild.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -33,6 +37,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C0EB08C6B18D3162057CAF04 /* libPods-wwuild.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -44,6 +49,8 @@
 			children = (
 				0FA39B5B211BC9DA00949644 /* wwuild */,
 				0FA39B5A211BC9DA00949644 /* Products */,
+				22C90FEFB1F0A8E21475BFDB /* Pods */,
+				D30DBE0F0645B0B2CC04EAF3 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -71,6 +78,23 @@
 			path = wwuild;
 			sourceTree = "<group>";
 		};
+		22C90FEFB1F0A8E21475BFDB /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				3991DBBE72E671962AFF65DB /* Pods-wwuild.debug.xcconfig */,
+				B05B5ABB5C95E05EEF2F06AE /* Pods-wwuild.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
+		D30DBE0F0645B0B2CC04EAF3 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				F1C453F5AB1372D42C017A3F /* libPods-wwuild.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -78,6 +102,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 0FA39B6F211BC9DD00949644 /* Build configuration list for PBXNativeTarget "wwuild" */;
 			buildPhases = (
+				593DB0888F9AF4785BB9D321 /* [CP] Check Pods Manifest.lock */,
 				0FA39B55211BC9DA00949644 /* Sources */,
 				0FA39B56211BC9DA00949644 /* Frameworks */,
 				0FA39B57211BC9DA00949644 /* Resources */,
@@ -135,6 +160,27 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		593DB0888F9AF4785BB9D321 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-wwuild-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		0FA39B55211BC9DA00949644 /* Sources */ = {
@@ -281,6 +327,7 @@
 		};
 		0FA39B70211BC9DD00949644 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3991DBBE72E671962AFF65DB /* Pods-wwuild.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
@@ -297,6 +344,7 @@
 		};
 		0FA39B71211BC9DD00949644 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B05B5ABB5C95E05EEF2F06AE /* Pods-wwuild.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
