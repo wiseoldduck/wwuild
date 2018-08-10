@@ -36,8 +36,8 @@
   _reference.attributedText = refString;
   _testYYText.attributedText = yyString;
 
-  _testYYText.numberOfLines = _reference.numberOfLines = 3;
-  _testYYText.font = [UIFont systemFontOfSize:18.0]; // NOTE this did not work when set on an earlier line (before setting text?)
+  _testYYText.numberOfLines = _reference.numberOfLines = 1;
+//  _testYYText.font = [UIFont systemFontOfSize:18.0]; // NOTE this did not work when set on an earlier line (before setting text?)
 
   [self.view addSubview:_reference];
   [self.view addSubview:_testYYText];
