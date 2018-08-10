@@ -17,12 +17,15 @@
 @implementation ViewController {
   YYLabel *_testYYText;
   UILabel *_reference;
+
+
 }
 
 - (void)viewDidLoad {
   [super viewDidLoad];
 
   _reference = [[UILabel alloc] init];
+
   _reference.font = [UIFont systemFontOfSize:18.0];
   _testYYText = [[YYLabel alloc] init];
 
@@ -39,12 +42,14 @@
   [self.view addSubview:_reference];
   [self.view addSubview:_testYYText];
 
-//  _testYYText.lineBreakMode = NSLineBreakByTruncatingMiddle;
+  _testYYText.lineBreakMode = NSLineBreakByTruncatingHead;
+  _reference.lineBreakMode = NSLineBreakByTruncatingHead;
 
   NSLog(@"%@", _reference.attributedText);
   NSLog(@"%@", _testYYText.attributedText);
 }
 
+/** UILabel on top, YYText at center **/
 - (void)viewDidLayoutSubviews {
   _testYYText.center = self.view.center;
   _testYYText.bounds = (CGRect) {CGPointZero, (CGSize) {self.view.bounds.size.width, 120.0}};
