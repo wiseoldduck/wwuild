@@ -530,15 +530,15 @@ dispatch_semaphore_signal(_lock);
         CGRect rect = line.bounds;
         
         if (constraintSizeIsExtended) {
-            if (isVerticalForm) {
-                if (rect.origin.x + rect.size.width >
-                    constraintRectBeforeExtended.origin.x +
-                    constraintRectBeforeExtended.size.width) break;
-            } else {
-                if (rect.origin.y + rect.size.height >
-                    constraintRectBeforeExtended.origin.y +
-                    constraintRectBeforeExtended.size.height) break;
-            }
+//            if (isVerticalForm) {
+//                if (rect.origin.x + rect.size.width >
+//                    constraintRectBeforeExtended.origin.x +
+//                    constraintRectBeforeExtended.size.width) break;
+//            } else {
+//                if (rect.origin.y + rect.size.height >
+//                    constraintRectBeforeExtended.origin.y +
+//                    constraintRectBeforeExtended.size.height) break;
+//            }
         }
         
         BOOL newRow = YES;
@@ -575,180 +575,198 @@ dispatch_semaphore_signal(_lock);
             }
         }
     }
-    
+
+  {
+    YYTextLine *originalLastLine = nil;
+    YYTextLine *originalNextToLastLine = nil;
     if (rowCount > 0) {
-        if (maximumNumberOfRows > 0) {
-            if (rowCount > maximumNumberOfRows) {
-                needTruncation = YES;
-                rowCount = maximumNumberOfRows;
-                do {
-                    YYTextLine *line = lines.lastObject;
-                    if (!line) break;
-                    if (line.row < rowCount) break;
-                    [lines removeLastObject];
-                } while (1);
+      if (maximumNumberOfRows > 0) {
+        if (rowCount > maximumNumberOfRows) {
+          needTruncation = YES;
+          rowCount = maximumNumberOfRows;
+          do {
+            YYTextLine *line = lines.lastObject;
+            if (!line) break;
+            if (line.row < rowCount) break;
+            if (!originalLastLine) {
+              originalLastLine = line;
+            } else if (!originalNextToLastLine) {
+              originalNextToLastLine = line;
             }
+            [lines removeLastObject];
+          } while (1);
         }
-        YYTextLine *lastLine = lines.lastObject;
-        if (!needTruncation && lastLine.range.location + lastLine.range.length < text.length) {
-            needTruncation = YES;
-        }
-        
-        // Give user a chance to modify the line's position.
-        if (container.linePositionModifier) {
-            [container.linePositionModifier modifyLines:lines fromText:text inContainer:container];
-            textBoundingRect = CGRectZero;
-            for (NSUInteger i = 0, max = lines.count; i < max; i++) {
-                YYTextLine *line = lines[i];
-                if (i == 0) textBoundingRect = line.bounds;
-                else textBoundingRect = CGRectUnion(textBoundingRect, line.bounds);
-            }
-        }
-        
-        lineRowsEdge = calloc(rowCount, sizeof(YYRowEdge));
-        if (lineRowsEdge == NULL) goto fail;
-        lineRowsIndex = calloc(rowCount, sizeof(NSUInteger));
-        if (lineRowsIndex == NULL) goto fail;
-        NSInteger lastRowIdx = -1;
-        CGFloat lastHead = 0;
-        CGFloat lastFoot = 0;
+      }
+      YYTextLine *lastLine = lines.lastObject;
+      if (!originalLastLine) {
+        originalLastLine = lastLine;
+      }
+      if (!originalNextToLastLine) {
+        originalNextToLastLine = lastLine;
+      }
+      if (!needTruncation && lastLine.range.location + lastLine.range.length < text.length) {
+        needTruncation = YES;
+      }
+
+      // Give user a chance to modify the line's position.
+      if (container.linePositionModifier) {
+        [container.linePositionModifier modifyLines:lines fromText:text inContainer:container];
+        textBoundingRect = CGRectZero;
         for (NSUInteger i = 0, max = lines.count; i < max; i++) {
-            YYTextLine *line = lines[i];
-            CGRect rect = line.bounds;
-            if ((NSInteger)line.row != lastRowIdx) {
-                if (lastRowIdx >= 0) {
-                    lineRowsEdge[lastRowIdx] = (YYRowEdge) {.head = lastHead, .foot = lastFoot };
-                }
-                lastRowIdx = line.row;
-                lineRowsIndex[lastRowIdx] = i;
-                if (isVerticalForm) {
-                    lastHead = rect.origin.x + rect.size.width;
-                    lastFoot = lastHead - rect.size.width;
-                } else {
-                    lastHead = rect.origin.y;
-                    lastFoot = lastHead + rect.size.height;
-                }
-            } else {
-                if (isVerticalForm) {
-                    lastHead = MAX(lastHead, rect.origin.x + rect.size.width);
-                    lastFoot = MIN(lastFoot, rect.origin.x);
-                } else {
-                    lastHead = MIN(lastHead, rect.origin.y);
-                    lastFoot = MAX(lastFoot, rect.origin.y + rect.size.height);
-                }
-            }
+          YYTextLine *line = lines[i];
+          if (i == 0) textBoundingRect = line.bounds;
+          else textBoundingRect = CGRectUnion(textBoundingRect, line.bounds);
         }
-        lineRowsEdge[lastRowIdx] = (YYRowEdge) {.head = lastHead, .foot = lastFoot };
-        
-        for (NSUInteger i = 1; i < rowCount; i++) {
-            YYRowEdge v0 = lineRowsEdge[i - 1];
-            YYRowEdge v1 = lineRowsEdge[i];
-            lineRowsEdge[i - 1].foot = lineRowsEdge[i].head = (v0.foot + v1.head) * 0.5;
+      }
+
+      lineRowsEdge = calloc(rowCount, sizeof(YYRowEdge));
+      if (lineRowsEdge == NULL) goto fail;
+      lineRowsIndex = calloc(rowCount, sizeof(NSUInteger));
+      if (lineRowsIndex == NULL) goto fail;
+      NSInteger lastRowIdx = -1;
+      CGFloat lastHead = 0;
+      CGFloat lastFoot = 0;
+      for (NSUInteger i = 0, max = lines.count; i < max; i++) {
+        YYTextLine *line = lines[i];
+        CGRect rect = line.bounds;
+        if ((NSInteger) line.row != lastRowIdx) {
+          if (lastRowIdx >= 0) {
+            lineRowsEdge[lastRowIdx] = (YYRowEdge) {.head = lastHead, .foot = lastFoot};
+          }
+          lastRowIdx = line.row;
+          lineRowsIndex[lastRowIdx] = i;
+          if (isVerticalForm) {
+            lastHead = rect.origin.x + rect.size.width;
+            lastFoot = lastHead - rect.size.width;
+          } else {
+            lastHead = rect.origin.y;
+            lastFoot = lastHead + rect.size.height;
+          }
+        } else {
+          if (isVerticalForm) {
+            lastHead = MAX(lastHead, rect.origin.x + rect.size.width);
+            lastFoot = MIN(lastFoot, rect.origin.x);
+          } else {
+            lastHead = MIN(lastHead, rect.origin.y);
+            lastFoot = MAX(lastFoot, rect.origin.y + rect.size.height);
+          }
         }
+      }
+      lineRowsEdge[lastRowIdx] = (YYRowEdge) {.head = lastHead, .foot = lastFoot};
+
+      for (NSUInteger i = 1; i < rowCount; i++) {
+        YYRowEdge v0 = lineRowsEdge[i - 1];
+        YYRowEdge v1 = lineRowsEdge[i];
+        lineRowsEdge[i - 1].foot = lineRowsEdge[i].head = (v0.foot + v1.head) * 0.5;
+      }
     }
-    
+
     { // calculate bounding size
-        CGRect rect = textBoundingRect;
-        if (container.path) {
-            if (container.pathLineWidth > 0) {
-                CGFloat inset = container.pathLineWidth / 2;
-                rect = CGRectInset(rect, -inset, -inset);
-            }
-        } else {
-            rect = UIEdgeInsetsInsetRect(rect,YYTextUIEdgeInsetsInvert(container.insets));
+      CGRect rect = textBoundingRect;
+      if (container.path) {
+        if (container.pathLineWidth > 0) {
+          CGFloat inset = container.pathLineWidth / 2;
+          rect = CGRectInset(rect, -inset, -inset);
         }
-        rect = CGRectStandardize(rect);
-        CGSize size = rect.size;
-        if (container.verticalForm) {
-            size.width += container.size.width - (rect.origin.x + rect.size.width);
-        } else {
-            size.width += rect.origin.x;
-        }
-        size.height += rect.origin.y;
-        if (size.width < 0) size.width = 0;
-        if (size.height < 0) size.height = 0;
-        size.width = ceil(size.width);
-        size.height = ceil(size.height);
-        textBoundingSize = size;
+      } else {
+        rect = UIEdgeInsetsInsetRect(rect, YYTextUIEdgeInsetsInvert(container.insets));
+      }
+      rect = CGRectStandardize(rect);
+      CGSize size = rect.size;
+      if (container.verticalForm) {
+        size.width += container.size.width - (rect.origin.x + rect.size.width);
+      } else {
+        size.width += rect.origin.x;
+      }
+      size.height += rect.origin.y;
+      if (size.width < 0) size.width = 0;
+      if (size.height < 0) size.height = 0;
+      size.width = ceil(size.width);
+      size.height = ceil(size.height);
+      textBoundingSize = size;
     }
-    
+
     visibleRange = YYTextNSRangeFromCFRange(CTFrameGetVisibleStringRange(ctFrame));
     if (needTruncation) {
-        YYTextLine *lastLine = lines.lastObject;
-        NSRange lastRange = lastLine.range;
-        visibleRange.length = lastRange.location + lastRange.length - visibleRange.location;
-        
-        // create truncated line
-        if (container.truncationType != YYTextTruncationTypeNone) {
-            CTLineRef truncationTokenLine = NULL;
-            if (container.truncationToken) {
-                truncationToken = container.truncationToken;
-                truncationTokenLine = CTLineCreateWithAttributedString((CFAttributedStringRef)truncationToken);
+      YYTextLine *lastLine = lines.lastObject;
+      NSRange lastRange = lastLine.range;
+      visibleRange.length = lastRange.location + lastRange.length - visibleRange.location;
+
+      // create truncated line
+      if (container.truncationType != YYTextTruncationTypeNone) {
+        CTLineRef truncationTokenLine = NULL;
+        if (container.truncationToken) {
+          truncationToken = container.truncationToken;
+          truncationTokenLine = CTLineCreateWithAttributedString((CFAttributedStringRef) truncationToken);
+        } else {
+          CFArrayRef runs = CTLineGetGlyphRuns(lastLine.CTLine);
+          NSUInteger runCount = CFArrayGetCount(runs);
+          NSMutableDictionary *attrs = nil;
+          if (runCount > 0) {
+            CTRunRef run = CFArrayGetValueAtIndex(runs, runCount - 1);
+            attrs = (id) CTRunGetAttributes(run);
+            attrs = attrs ? attrs.mutableCopy : [NSMutableArray new];
+            [attrs removeObjectsForKeys:[NSMutableAttributedString yy_allDiscontinuousAttributeKeys]];
+            CTFontRef font = (__bridge CFTypeRef) attrs[(id) kCTFontAttributeName];
+            CGFloat fontSize = font ? CTFontGetSize(font) : 12.0;
+            UIFont *uiFont = [UIFont systemFontOfSize:fontSize * 0.9];
+            if (uiFont) {
+              font = CTFontCreateWithName((__bridge CFStringRef) uiFont.fontName, uiFont.pointSize, NULL);
             } else {
-                CFArrayRef runs = CTLineGetGlyphRuns(lastLine.CTLine);
-                NSUInteger runCount = CFArrayGetCount(runs);
-                NSMutableDictionary *attrs = nil;
-                if (runCount > 0) {
-                    CTRunRef run = CFArrayGetValueAtIndex(runs, runCount - 1);
-                    attrs = (id)CTRunGetAttributes(run);
-                    attrs = attrs ? attrs.mutableCopy : [NSMutableArray new];
-                    [attrs removeObjectsForKeys:[NSMutableAttributedString yy_allDiscontinuousAttributeKeys]];
-                    CTFontRef font = (__bridge CFTypeRef)attrs[(id)kCTFontAttributeName];
-                    CGFloat fontSize = font ? CTFontGetSize(font) : 12.0;
-                    UIFont *uiFont = [UIFont systemFontOfSize:fontSize * 0.9];
-                    if (uiFont) {
-                        font = CTFontCreateWithName((__bridge CFStringRef)uiFont.fontName, uiFont.pointSize, NULL);
-                    } else {
-                        font = NULL;
-                    }
-                    if (font) {
-                        attrs[(id)kCTFontAttributeName] = (__bridge id)(font);
-                        uiFont = nil;
-                        CFRelease(font);
-                    }
-                    CGColorRef color = (__bridge CGColorRef)(attrs[(id)kCTForegroundColorAttributeName]);
-                    if (color && CFGetTypeID(color) == CGColorGetTypeID() && CGColorGetAlpha(color) == 0) {
-                        // ignore clear color
-                        [attrs removeObjectForKey:(id)kCTForegroundColorAttributeName];
-                    }
-                    if (!attrs) attrs = [NSMutableDictionary new];
-                }
-                truncationToken = [[NSAttributedString alloc] initWithString:YYTextTruncationToken attributes:attrs];
-                truncationTokenLine = CTLineCreateWithAttributedString((CFAttributedStringRef)truncationToken);
+              font = NULL;
             }
-            if (truncationTokenLine) {
-                CTLineTruncationType type = kCTLineTruncationEnd;
-                if (container.truncationType == YYTextTruncationTypeStart) {
-                    type = kCTLineTruncationStart;
-                } else if (container.truncationType == YYTextTruncationTypeMiddle) {
-                    type = kCTLineTruncationMiddle;
-                }
-                NSMutableAttributedString *lastLineText = [text attributedSubstringFromRange:lastLine.range].mutableCopy;
-                [lastLineText appendAttributedString:truncationToken];
-                CTLineRef ctLastLineExtend = CTLineCreateWithAttributedString((CFAttributedStringRef)lastLineText);
-                if (ctLastLineExtend) {
-                    CGFloat truncatedWidth = lastLine.width;
-                    CGRect cgPathRect = CGRectZero;
-                    if (CGPathIsRect(cgPath, &cgPathRect)) {
-                        if (isVerticalForm) {
-                            truncatedWidth = cgPathRect.size.height;
-                        } else {
-                            truncatedWidth = cgPathRect.size.width;
-                        }
-                    }
-                    CTLineRef ctTruncatedLine = CTLineCreateTruncatedLine(ctLastLineExtend, truncatedWidth, type, truncationTokenLine);
-                    CFRelease(ctLastLineExtend);
-                    if (ctTruncatedLine) {
-                        truncatedLine = [YYTextLine lineWithCTLine:ctTruncatedLine position:lastLine.position vertical:isVerticalForm];
-                        truncatedLine.index = lastLine.index;
-                        truncatedLine.row = lastLine.row;
-                        CFRelease(ctTruncatedLine);
-                    }
-                }
-                CFRelease(truncationTokenLine);
+            if (font) {
+              attrs[(id) kCTFontAttributeName] = (__bridge id) (font);
+              uiFont = nil;
+              CFRelease(font);
             }
+            CGColorRef color = (__bridge CGColorRef) (attrs[(id) kCTForegroundColorAttributeName]);
+            if (color && CFGetTypeID(color) == CGColorGetTypeID() && CGColorGetAlpha(color) == 0) {
+              // ignore clear color
+              [attrs removeObjectForKey:(id) kCTForegroundColorAttributeName];
+            }
+            if (!attrs) attrs = [NSMutableDictionary new];
+          }
+          truncationToken = [[NSAttributedString alloc] initWithString:YYTextTruncationToken attributes:attrs];
+          truncationTokenLine = CTLineCreateWithAttributedString((CFAttributedStringRef) truncationToken);
         }
+        if (truncationTokenLine) {
+          CTLineTruncationType type = kCTLineTruncationEnd;
+          if (container.truncationType == YYTextTruncationTypeStart) {
+            type = kCTLineTruncationStart;
+          } else if (container.truncationType == YYTextTruncationTypeMiddle) {
+            type = kCTLineTruncationMiddle;
+          }
+
+          NSMutableAttributedString *lastLineText = [text attributedSubstringFromRange:lastLine.range].mutableCopy;
+//          NSMutableAttributedString *lastLineText = [text attributedSubstringFromRange:lastLine.range].mutableCopy;
+          [lastLineText appendAttributedString:[text attributedSubstringFromRange:originalNextToLastLine.range]];
+          [lastLineText appendAttributedString:[text attributedSubstringFromRange:originalLastLine.range]];
+          CTLineRef ctLastLineExtend = CTLineCreateWithAttributedString((CFAttributedStringRef) lastLineText);
+          if (ctLastLineExtend) {
+            CGFloat truncatedWidth = lastLine.width;
+            CGRect cgPathRect = CGRectZero;
+            if (CGPathIsRect(cgPath, &cgPathRect)) {
+              if (isVerticalForm) {
+                truncatedWidth = cgPathRect.size.height;
+              } else {
+                truncatedWidth = cgPathRect.size.width;
+              }
+            }
+            CTLineRef ctTruncatedLine = CTLineCreateTruncatedLine(ctLastLineExtend, truncatedWidth, type, truncationTokenLine);
+            CFRelease(ctLastLineExtend);
+            if (ctTruncatedLine) {
+              truncatedLine = [YYTextLine lineWithCTLine:ctTruncatedLine position:lastLine.position vertical:isVerticalForm];
+              truncatedLine.index = lastLine.index;
+              truncatedLine.row = lastLine.row;
+              CFRelease(ctTruncatedLine);
+            }
+          }
+          CFRelease(truncationTokenLine);
+        }
+      }
     }
+  }
     
     if (isVerticalForm) {
         NSCharacterSet *rotateCharset = YYTextVerticalFormRotateCharacterSet();

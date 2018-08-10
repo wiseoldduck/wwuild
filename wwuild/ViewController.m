@@ -36,14 +36,14 @@
   _reference.attributedText = refString;
   _testYYText.attributedText = yyString;
 
-  _testYYText.numberOfLines = _reference.numberOfLines = 0;
+  _testYYText.numberOfLines = _reference.numberOfLines = 3;
   _testYYText.font = [UIFont systemFontOfSize:18.0]; // NOTE this did not work when set on an earlier line (before setting text?)
 
   [self.view addSubview:_reference];
   [self.view addSubview:_testYYText];
 
-  _testYYText.lineBreakMode = NSLineBreakByTruncatingHead;
-  _reference.lineBreakMode = NSLineBreakByTruncatingHead;
+  _testYYText.lineBreakMode = NSLineBreakByCharWrapping;
+  _reference.lineBreakMode = NSLineBreakByCharWrapping;
 
   NSLog(@"%@", _reference.attributedText);
   NSLog(@"%@", _testYYText.attributedText);

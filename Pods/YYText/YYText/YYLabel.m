@@ -773,6 +773,7 @@ static dispatch_queue_t YYLabelGetReleaseQueue() {
     if (_lineBreakMode == lineBreakMode) return;
     _lineBreakMode = lineBreakMode;
     _innerText.yy_lineBreakMode = lineBreakMode;
+//    [_innerText addAttribute:NSParagraphStyleAttributeName value:[NSParagraphStyle defaultParagraphStyle] range:(NSRange) {0, _innerText.string.length}];
     // allow multi-line break
     switch (lineBreakMode) {
         case NSLineBreakByWordWrapping:
@@ -780,16 +781,24 @@ static dispatch_queue_t YYLabelGetReleaseQueue() {
         case NSLineBreakByClipping: {
             _innerContainer.truncationType = YYTextTruncationTypeNone;
             _innerText.yy_lineBreakMode = lineBreakMode;
-        } break;
-        case NSLineBreakByTruncatingHead:{
+        }
+        break;
+        case NSLineBreakByTruncatingHead: {
             _innerContainer.truncationType = YYTextTruncationTypeStart;
             _innerText.yy_lineBreakMode = NSLineBreakByWordWrapping;
-        } break;
-        case NSLineBreakByTruncatingTail:{
+        }
+        break;
+        case NSLineBreakByTruncatingTail: {
             _innerContainer.truncationType = YYTextTruncationTypeEnd;
             _innerText.yy_lineBreakMode = NSLineBreakByWordWrapping;
-        } break;
+        }
+        break;
         case NSLineBreakByTruncatingMiddle: {
+            /**
+            "The line is displayed so that the beginning and end fit in the container and the missing text in the middle is
+             indicated by an ellipsis glyph. This mode is used for single-line layout; using it with multiline text
+             truncates the text into a single line."
+             **/
             _innerContainer.truncationType = YYTextTruncationTypeMiddle;
             _innerText.yy_lineBreakMode = NSLineBreakByWordWrapping;
         } break;
