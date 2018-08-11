@@ -108,6 +108,7 @@ static dispatch_once_t init_predicate;
     NSMutableArray *setup = [NSMutableArray new];
     for (int i = 0; i <= 3; i++) {
       for (NSLineBreakMode j = NSLineBreakByWordWrapping; j <= NSLineBreakByTruncatingMiddle; j++) {
+//        if (j == NSLineBreakByTruncatingHead && i == 2) { _currentConfig = setup.count; }
         if (j == NSLineBreakByClipping) continue;
         [setup addObject:[[DemoConfig alloc] initWithNumberOfLines:i lineBreakMode:j]];
       }
@@ -115,6 +116,7 @@ static dispatch_once_t init_predicate;
     self->_demoConfigs = [NSArray arrayWithArray:setup];
     }
   });
+
   [self viewTapped:nil];
 }
 

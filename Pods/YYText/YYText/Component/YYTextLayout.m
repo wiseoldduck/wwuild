@@ -513,6 +513,7 @@ dispatch_semaphore_signal(_lock);
     
     // calculate line frame
     NSUInteger lineCurrentIdx = 0;
+    BOOL measuringBeyondConstraints = NO;
     for (NSUInteger i = 0; i < lineCount; i++) {
         CTLineRef ctLine = CFArrayGetValueAtIndex(ctLines, i);
         CFArrayRef ctRuns = CTLineGetGlyphRuns(ctLine);
@@ -528,21 +529,28 @@ dispatch_semaphore_signal(_lock);
         
         YYTextLine *line = [YYTextLine lineWithCTLine:ctLine position:position vertical:isVerticalForm];
         CGRect rect = line.bounds;
-        
+
         if (constraintSizeIsExtended) {
-//            if (isVerticalForm) {
-//                if (rect.origin.x + rect.size.width >
-//                    constraintRectBeforeExtended.origin.x +
-//                    constraintRectBeforeExtended.size.width) break;
-//            } else {
-//                if (rect.origin.y + rect.size.height >
-//                    constraintRectBeforeExtended.origin.y +
-//                    constraintRectBeforeExtended.size.height) break;
-//            }
+            if (isVerticalForm) {
+                if (rect.origin.x + rect.size.width >
+                  constraintRectBeforeExtended.origin.x +
+                    constraintRectBeforeExtended.size.width) {
+                    measuringBeyondConstraints = YES;
+                };
+            } else {
+                if (rect.origin.y + rect.size.height >
+                  constraintRectBeforeExtended.origin.y +
+                    constraintRectBeforeExtended.size.height) {
+                    measuringBeyondConstraints = YES;
+                }
+            }
         }
-        
-        BOOL newRow = YES;
-        if (rowMaySeparated && position.x != lastPosition.x) {
+//        if (measuringBeyondConstraints && container.truncationType != YYTextTruncationTypeStart && container.truncationType != YYTextTruncationTypeMiddle) {
+//            break;
+//        }
+
+        BOOL newRow = !measuringBeyondConstraints;
+        if (newRow && rowMaySeparated && position.x != lastPosition.x) {
             if (isVerticalForm) {
                 if (rect.size.width > lastRect.size.width) {
                     if (rect.origin.x > lastPosition.x && lastPosition.x > rect.origin.x - rect.size.width) newRow = NO;
@@ -567,9 +575,10 @@ dispatch_semaphore_signal(_lock);
         [lines addObject:line];
         rowCount = rowIdx + 1;
         lineCurrentIdx ++;
-        
-        if (i == 0) textBoundingRect = rect;
-        else {
+
+        if (i == 0) {
+            textBoundingRect = rect;
+        } else if (!measuringBeyondConstraints) {
             if (maximumNumberOfRows == 0 || rowIdx < maximumNumberOfRows) {
                 textBoundingRect = CGRectUnion(textBoundingRect, rect);
             }
@@ -577,8 +586,7 @@ dispatch_semaphore_signal(_lock);
     }
 
   {
-    YYTextLine *originalLastLine = nil;
-    YYTextLine *originalNextToLastLine = nil;
+      NSMutableArray<YYTextLine *> *removedLines = [NSMutableArray new];
     if (rowCount > 0) {
       if (maximumNumberOfRows > 0) {
         if (rowCount > maximumNumberOfRows) {
@@ -586,26 +594,21 @@ dispatch_semaphore_signal(_lock);
           rowCount = maximumNumberOfRows;
           do {
             YYTextLine *line = lines.lastObject;
-            if (!line) break;
-            if (line.row < rowCount) break;
-            if (!originalLastLine) {
-              originalLastLine = line;
-            } else if (!originalNextToLastLine) {
-              originalNextToLastLine = line;
-            }
+              if (!line) break; // why are there no lines
+              if (line.row < rowCount) break; // we have an allowed # of lines now
             [lines removeLastObject];
+              [removedLines addObject:line];
           } while (1);
         }
       }
-      YYTextLine *lastLine = lines.lastObject;
-      if (!originalLastLine) {
-        originalLastLine = lastLine;
-      }
-      if (!originalNextToLastLine) {
-        originalNextToLastLine = lastLine;
-      }
+      YYTextLine *lastLine = rowCount < lines.count ? lines[rowCount-1] : lines.lastObject;
       if (!needTruncation && lastLine.range.location + lastLine.range.length < text.length) {
         needTruncation = YES;
+        while (lines.count > rowCount) {
+            YYTextLine *line = lines.lastObject;
+            [lines removeLastObject];
+            [removedLines addObject:line];
+        }
       }
 
       // Give user a chance to modify the line's position.
@@ -739,20 +742,37 @@ dispatch_semaphore_signal(_lock);
           }
 
           NSMutableAttributedString *lastLineText = [text attributedSubstringFromRange:lastLine.range].mutableCopy;
-//          NSMutableAttributedString *lastLineText = [text attributedSubstringFromRange:lastLine.range].mutableCopy;
-          [lastLineText appendAttributedString:[text attributedSubstringFromRange:originalNextToLastLine.range]];
-          [lastLineText appendAttributedString:[text attributedSubstringFromRange:originalLastLine.range]];
-          CTLineRef ctLastLineExtend = CTLineCreateWithAttributedString((CFAttributedStringRef) lastLineText);
-          if (ctLastLineExtend) {
             CGFloat truncatedWidth = lastLine.width;
+            CGFloat atLeastOneLine = lastLine.width;
             CGRect cgPathRect = CGRectZero;
             if (CGPathIsRect(cgPath, &cgPathRect)) {
-              if (isVerticalForm) {
-                truncatedWidth = cgPathRect.size.height;
-              } else {
-                truncatedWidth = cgPathRect.size.width;
-              }
+                if (isVerticalForm) {
+                    truncatedWidth = cgPathRect.size.height;
+                } else {
+                    truncatedWidth = cgPathRect.size.width;
+                }
             }
+            int i = 0;
+            if (type != kCTLineTruncationStart) { // Middle or End/Tail wants text preceding truncated content
+                i = removedLines.count - 1;
+                while (atLeastOneLine < truncatedWidth && i >= 0) {
+                    [lastLineText appendAttributedString:[text attributedSubstringFromRange:removedLines[i].range]];
+                    atLeastOneLine += removedLines[i--].width;
+                }
+            }
+            if (type != kCTLineTruncationEnd && removedLines.count > 0) { // Middle or Start/Head wants text following truncated content
+                i = 0;
+                atLeastOneLine = removedLines[i].width;
+                while (atLeastOneLine < truncatedWidth && i < removedLines.count) {
+                    atLeastOneLine += removedLines[i++].width;
+                }
+                for (i--; i >= 0; i--) {
+                    [lastLineText appendAttributedString:[text attributedSubstringFromRange:removedLines[i].range]];
+                }
+            }
+
+          CTLineRef ctLastLineExtend = CTLineCreateWithAttributedString((CFAttributedStringRef) lastLineText);
+          if (ctLastLineExtend) {
             CTLineRef ctTruncatedLine = CTLineCreateTruncatedLine(ctLastLineExtend, truncatedWidth, type, truncationTokenLine);
             CFRelease(ctLastLineExtend);
             if (ctTruncatedLine) {
