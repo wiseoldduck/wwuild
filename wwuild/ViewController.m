@@ -83,7 +83,11 @@
   _testYYText = [[YYLabel alloc] init];
 
   NSMutableAttributedString *refString = [[NSMutableAttributedString alloc] initWithString:@"View Our Lawyer Directory. See lawyers by practice area. Choose an area of law to find top-rated attorneys near you. Get free legal advice from a Rocket Lawyer On Call Attorney. Real lawyers in your state, who specialize in your issue. Ask your legal question online today!"];
-//  refString.yy_lineBreakMode = NSLineBreakByTruncatingMiddle; // NOTE this isn't doing jack for either - which is expected
+  NSMutableParagraphStyle *ps = [[NSMutableParagraphStyle alloc] init];
+  ps.lineBreakMode = NSLineBreakByTruncatingHead;
+//  ps.lineSpacing = 22; This is just a visually obvious attribute to sanity-check that we are setting a paragraphStyle successfully.
+  NSRange psr = (NSRange){.location=0, .length=refString.string.length};
+  [refString addAttribute:NSParagraphStyleAttributeName value:ps range:psr];
   NSMutableAttributedString *yyString = [refString mutableCopy];
 
   _reference.attributedText = refString;
@@ -123,7 +127,7 @@ static dispatch_once_t init_predicate;
 - (void)viewTapped:(id) sender {
   if (_currentConfig == _demoConfigs.count) _currentConfig = 0;
   DemoConfig *newConfig = _demoConfigs[_currentConfig++];
-  _reference.lineBreakMode = _testYYText.lineBreakMode = newConfig.lineBreakMode;
+//  _reference.lineBreakMode = _testYYText.lineBreakMode = newConfig.lineBreakMode; Experimentally trying to only set via attributedText / paragraphStyle.
   _reference.numberOfLines = _testYYText.numberOfLines = newConfig.numberOfLines;
   _description.text = newConfig.description;
   [self.view setNeedsLayout];
